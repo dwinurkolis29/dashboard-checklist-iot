@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist TA IoT Broiler</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Roboto,sans-serif;background:#EBF4F6;padding:20px;color:#09637E}
+h1{font-size:20px;font-weight:600;margin-bottom:4px;color:#09637E}
+.subtitle{font-size:13px;color:#7AB2B2;margin-bottom:20px}
+.summary{background:#d4ecf0;border-radius:14px;padding:14px 20px;margin-bottom:20px;display:flex;gap:24px;align-items:center}
+.sum-item{text-align:center;flex:1}
+.sum-val{font-size:26px;font-weight:600;color:#09637E}
+.sum-lbl{font-size:11px;color:#3d6b74;margin-top:2px}
+.sum-div{width:1px;background:#a5c9d0;align-self:stretch}
+.phase{background:#fff;border-radius:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(9,99,126,0.08),0 2px 8px rgba(9,99,126,0.05);overflow:hidden}
+.phase-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.phase-header:hover{background:#f5fafb}
+.phase-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.phase-info{flex:1}
+.phase-title{font-size:15px;font-weight:600;color:#09637E}
+.phase-sub{font-size:11px;color:#7AB2B2;margin-top:2px}
+.mini-bar{height:4px;background:#EBF4F6;border-radius:100px;margin-top:8px;overflow:hidden}
+.mini-fill{height:100%;border-radius:100px;transition:width 0.3s}
+.phase-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ptxt{font-size:12px;font-weight:500;color:#09637E;min-width:34px;text-align:right}
+.chev{transition:transform 0.2s;color:#7AB2B2;font-size:13px}
+.phase-body{display:none;padding:0 16px 14px}
+.phase-body.open{display:block}
+.task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid #EBF4F6;cursor:pointer}
+.task:last-child{border-bottom:none}
+.task:hover{opacity:0.82}
+.cb{width:20px;height:20px;border-radius:6px;border:2px solid #b0cdd4;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.15s}
+.cb.done{background:#09637E;border-color:#09637E}
+.cb svg{display:none}
+.cb.done svg{display:block}
+.task-text{flex:1}
+.task-label{font-size:13px;color:#1a3d47;line-height:1.4;font-weight:500}
+.task-label.done{color:#7AB2B2;text-decoration:line-through;font-weight:400}
+.task-note{font-size:11px;color:#7AB2B2;margin-top:2px;line-height:1.5}
+.tag{display:inline-block;border-radius:5px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:5px;vertical-align:middle}
+.tag-hw{background:#fff3e0;color:#E65100}
+.tag-fw{background:#e8f5e9;color:#2E7D32}
+.tag-fb{background:#e3f2fd;color:#1565C0}
+.tag-fl{background:#f3e5f5;color:#6A1B9A}
+.tag-test{background:#fce4ec;color:#880E4F}
+</style>
+</head>
+<body>
+<h1>Checklist TA — IoT Monitoring Kandang Broiler</h1>
+<p class="subtitle">Klik task untuk centang. Progress tersimpan otomatis di browser.</p>
+
+<div class="summary">
+  <div class="sum-item"><div class="sum-val" id="s-done">0</div><div class="sum-lbl">Selesai</div></div>
+  <div class="sum-div"></div>
+  <div class="sum-item"><div class="sum-val" id="s-total">0</div><div class="sum-lbl">Total Task</div></div>
+  <div class="sum-div"></div>
+  <div class="sum-item"><div class="sum-val" id="s-pct">0%</div><div class="sum-lbl">Progress</div></div>
+</div>
+
+<div id="phases"></div>
+
+<script>
+const phases=[
+  {id:'p1',num:'01',title:'Persiapan & Desain Sistem',sub:'Fondasi sebelum menyentuh hardware atau kode',bg:'#e0f2f1',fg:'#00695C',barColor:'#00897B',
+   tasks:[
+    {l:'Finalisasi judul Tugas Akhir',n:'Pilih satu dari dua opsi judul di dokumen'},
+    {l:'Buat skema wiring ESP32 + DHT22 + MQ-135 + Relay',n:'Gambar diagram koneksi pin lengkap sebelum merangkai'},
+    {l:'Desain struktur Firebase Realtime Database',n:'devices/device_1/readings/timestamp/{temp,humidity,ammonia}',tag:'fb'},
+    {l:'Setup akun Firebase & buat project baru',n:'Aktifkan Realtime Database, Firestore, Authentication',tag:'fb'},
+    {l:'Tentukan nilai threshold tiap parameter',n:'Suhu: 30–35°C, Kelembaban: 60–80%, Amonia: Low/Medium/High'},
+    {l:'Buat struktur folder project PlatformIO',n:'src/main.cpp, sensors/, network/, controller/, utils/',tag:'fw'},
+  ]},
+  {id:'p2',num:'02',title:'Perakitan Hardware',sub:'Rangkaian fisik ESP32 dan semua sensor',bg:'#fff3e0',fg:'#E65100',barColor:'#FB8C00',
+   tasks:[
+    {l:'Pasang DHT22 ke ESP32 dengan pull-up resistor 10kΩ',n:'DATA → GPIO tertentu, VCC 3.3V, GND',tag:'hw'},
+    {l:'Pasang MQ-135 ke pin ADC ESP32',n:'AOUT → ADC pin, VCC 5V, GND — tunggu warm-up ±30 detik',tag:'hw'},
+    {l:'Pasang relay module ke ESP32',n:'IN → GPIO digital, VCC 5V, GND — pastikan isolasi daya',tag:'hw'},
+    {l:'Hubungkan fan ke relay',n:'Cek rating arus relay sesuai daya fan',tag:'hw'},
+    {l:'Tes semua koneksi di breadboard sebelum permanen',n:'Pastikan tidak ada short circuit'},
+    {l:'Solder ke PCB / perfboard',n:'Setelah semua tes OK, pindah ke rangkaian permanen',tag:'hw'},
+    {l:'Pasang ke enclosure (box)',n:'Buat lubang ventilasi untuk sensor gas',tag:'hw'},
+  ]},
+  {id:'p3',num:'03',title:'Firmware ESP32',sub:'Kode embedded di PlatformIO + Arduino framework',bg:'#e8f5e9',fg:'#2E7D32',barColor:'#43A047',
+   tasks:[
+    {l:'Setup project PlatformIO + konfigurasi platformio.ini',n:'Framework arduino, board esp32dev, lib_deps DHT + Firebase ESP32',tag:'fw'},
+    {l:'Buat sensor layer — baca DHT22',n:'Fungsi readTemperature() dan readHumidity() dengan validasi',tag:'fw'},
+    {l:'Buat sensor layer — baca MQ-135',n:'Baca ADC → konversi ke kategori Low/Medium/High',tag:'fw'},
+    {l:'Implementasi moving average filter',n:'Buffer N sampel → rata-rata untuk reduce noise MQ-135',tag:'fw'},
+    {l:'Buat control layer — logika relay',n:'Suhu > threshold → relay ON; suhu < threshold → relay OFF',tag:'fw'},
+    {l:'Implementasi koneksi WiFi + auto reconnect',n:'Loop reconnect dengan delay backoff saat koneksi putus',tag:'fw'},
+    {l:'Implementasi pengiriman data ke Firebase RTDB',n:'HTTP PUT ke endpoint .json dengan payload JSON',tag:'fw'},
+    {l:'Tambah timestamp ke setiap payload',n:'Gunakan NTP client (pool.ntp.org) untuk sinkronisasi waktu',tag:'fw'},
+    {l:'Implementasi offline buffering',n:'Simpan data di RAM saat WiFi putus, kirim ulang saat reconnect',tag:'fw'},
+    {l:'Tes firmware via serial monitor',n:'Pastikan semua data terbaca benar dan terkirim ke Firebase',tag:'fw'},
+  ]},
+  {id:'p4',num:'04',title:'Backend Firebase',sub:'Konfigurasi cloud sebagai bridge ESP32 ↔ Flutter',bg:'#e3f2fd',fg:'#1565C0',barColor:'#1E88E5',
+   tasks:[
+    {l:'Konfigurasi Firebase Realtime Database rules',n:'Lock write hanya dari device yang authenticated',tag:'fb'},
+    {l:'Setup Firebase Authentication',n:'Email/password untuk login Flutter app',tag:'fb'},
+    {l:'Buat struktur node sesuai rancangan di dokumen',n:'devices/device_1/status, last_update, readings/',tag:'fb'},
+    {l:'Validasi data masuk dari ESP32 di Firebase console',n:'Cek realtime stream saat ESP32 aktif berjalan',tag:'fb'},
+    {l:'Setup Firestore untuk histori (opsional)',n:'Jika butuh query range waktu yang lebih fleksibel dari RTDB',tag:'fb'},
+    {l:'Setup Firebase Cloud Messaging (FCM)',n:'Untuk push notifikasi saat threshold parameter terlampaui',tag:'fb'},
+  ]},
+  {id:'p5',num:'05',title:'Flutter Mobile App',sub:'Dari setup project sampai semua screen selesai',bg:'#f3e5f5',fg:'#6A1B9A',barColor:'#8E24AA',
+   tasks:[
+    {l:'Setup Flutter project + struktur folder',n:'lib/core/, features/, shared/ — arsitektur terstruktur',tag:'fl'},
+    {l:'Apply AppColors, AppTextTheme, AppTheme ke MaterialApp',n:'File tema yang sudah dibuat jadi single source of truth',tag:'fl'},
+    {l:'Integrasi Firebase ke Flutter',n:'firebase_core, firebase_database, firebase_auth packages',tag:'fl'},
+    {l:'Buat Authentication screen (Login)',n:'Form email + password → Firebase Auth → masuk ke app',tag:'fl'},
+    {l:'Buat Dashboard screen — real-time monitoring',n:'Stream dari Firebase RTDB → tampil suhu, kelembaban, amonia',tag:'fl'},
+    {l:'Buat widget SensorCard (reusable)',n:'Komponen card sensor yang dipakai di dashboard',tag:'fl'},
+    {l:'Buat widget AmoniaSegmentedButton',n:'M3 Segmented Button Low/Medium/High sesuai data Firebase',tag:'fl'},
+    {l:'Buat widget StatusBanner',n:'Normal / Warning / Critical berdasarkan threshold',tag:'fl'},
+    {l:'Buat Notifikasi screen',n:'List alert dari Firebase — filter Critical/Warning/Info/Resolved',tag:'fl'},
+    {l:'Implementasi FCM listener di Flutter',n:'Tampilkan local notification saat terima push dari Firebase',tag:'fl'},
+    {l:'Buat Riwayat screen + grafik historis',n:'fl_chart atau syncfusion — plot suhu & kelembaban dari RTDB',tag:'fl'},
+    {l:'Buat kontrol manual relay (toggle kipas)',n:'Write ke Firebase → ESP32 listen → trigger relay',tag:'fl'},
+    {l:'Buat Perangkat screen (status ESP32 + koneksi)',n:'Tampilkan last_update, online/offline, device info',tag:'fl'},
+  ]},
+  {id:'p6',num:'06',title:'Integrasi & End-to-End Testing',sub:'Validasi seluruh sistem dari sensor ke layar',bg:'#fce4ec',fg:'#880E4F',barColor:'#D81B60',
+   tasks:[
+    {l:'Tes alur penuh: sensor → ESP32 → Firebase → Flutter',n:'Ukur latency dari data sensor sampai tampil di app',tag:'test'},
+    {l:'Tes threshold relay: suhu naik → kipas otomatis ON',n:'Simulasikan panas dekat sensor DHT22, catat respons waktu',tag:'test'},
+    {l:'Tes notifikasi: parameter exceed → FCM → Flutter',n:'Pastikan push notif terkirim dan terbaca di HP',tag:'test'},
+    {l:'Tes offline buffering: WiFi mati → nyalakan lagi',n:'Data yang di-buffer harus terkirim otomatis saat reconnect',tag:'test'},
+    {l:'Tes kontrol manual relay dari Flutter',n:'Toggle kipas dari app → relay bereaksi di hardware',tag:'test'},
+    {l:'Tes stabilitas 24 jam non-stop',n:'Log tiap 5–10 detik, pantau memory leak dan disconnect',tag:'test'},
+    {l:'Validasi akurasi sensor DHT22',n:'Bandingkan dengan termometer & hygrometer referensi',tag:'test'},
+    {l:'Validasi kategori MQ-135 (Low/Medium/High)',n:'Uji kondisi udara berbeda — dokumentasikan hasilnya untuk bab pengujian',tag:'test'},
+  ]},
+  {id:'p7',num:'07',title:'Finalisasi & Dokumentasi TA',sub:'Tahap akhir sebelum sidang',bg:'#EBF4F6',fg:'#09637E',barColor:'#09637E',
+   tasks:[
+    {l:'Dokumentasi skema wiring final',n:'Gambar rangkaian hardware lengkap untuk lampiran laporan'},
+    {l:'Buat diagram blok arsitektur sistem',n:'ESP32 → WiFi → Firebase → Flutter — flow lengkap'},
+    {l:'Screenshot + screen recording Flutter app',n:'Untuk lampiran laporan dan materi presentasi sidang'},
+    {l:'Tulis bab implementasi hardware',n:'Langkah perakitan, komponen, dan hasil pengukuran fisik'},
+    {l:'Tulis bab implementasi software',n:'Firmware ESP32, struktur Firebase, Flutter app'},
+    {l:'Tulis bab pengujian & analisa',n:'Hasil tes threshold, akurasi sensor, latency sistem'},
+    {l:'Review dan finalisasi laporan TA',n:'Cek format, daftar pustaka, dan konsistensi data'},
+    {l:'Persiapan demo untuk sidang',n:'Hardware berjalan + app di HP siap untuk live demo'},
+  ]},
+];
+
+let state={};
+try{state=JSON.parse(localStorage.getItem('iot_ta')||'{}')}catch{}
+
+let allIds=[];
+phases.forEach(ph=>ph.tasks.forEach((_,i)=>allIds.push(ph.id+'-'+i)));
+
+function save(){try{localStorage.setItem('iot_ta',JSON.stringify(state))}catch{}}
+function updateSummary(){
+  const done=allIds.filter(id=>state[id]).length;
+  const total=allIds.length;
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-pct').textContent=Math.round(done/total*100)+'%';
+}
+function updateBar(pid,ph){
+  const ids=ph.tasks.map((_,i)=>pid+'-'+i);
+  const done=ids.filter(id=>state[id]).length;
+  const pct=Math.round(done/ids.length*100);
+  const fill=document.getElementById('fill-'+pid);
+  const ptxt=document.getElementById('ptxt-'+pid);
+  if(fill)fill.style.width=pct+'%';
+  if(ptxt)ptxt.textContent=done+'/'+ids.length;
+}
+function toggle(id,pid,ph){
+  state[id]=!state[id];
+  const cb=document.getElementById('cb-'+id);
+  const lbl=document.getElementById('lbl-'+id);
+  cb.classList.toggle('done',!!state[id]);
+  lbl.classList.toggle('done',!!state[id]);
+  updateBar(pid,ph);
+  updateSummary();
+  save();
+}
+function togglePhase(pid){
+  const body=document.getElementById('body-'+pid);
+  const chev=document.getElementById('chev-'+pid);
+  const open=body.classList.toggle('open');
+  chev.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+}
+
+const container=document.getElementById('phases');
+phases.forEach(ph=>{
+  const div=document.createElement('div');
+  div.className='phase';
+  const tasksHtml=ph.tasks.map((t,i)=>{
+    const id=ph.id+'-'+i;
+    const tagHtml=t.tag?`<span class="tag tag-${t.tag}">${t.tag.toUpperCase()}</span>`:'';
+    return `<div class="task" onclick="toggle('${id}','${ph.id}',phases[${phases.indexOf(ph)}])">
+      <div class="cb${state[id]?' done':''}" id="cb-${id}">
+        <svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5l3 3 6-7" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="task-text">
+        <div class="task-label${state[id]?' done':''}" id="lbl-${id}">${t.l}${tagHtml}</div>
+        <div class="task-note">${t.n}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  div.innerHTML=`
+    <div class="phase-header" onclick="togglePhase('${ph.id}')">
+      <div class="phase-num" style="background:${ph.bg};color:${ph.fg}">${ph.num}</div>
+      <div class="phase-info">
+        <div class="phase-title">${ph.title}</div>
+        <div class="phase-sub">${ph.sub}</div>
+        <div class="mini-bar"><div class="mini-fill" id="fill-${ph.id}" style="width:0%;background:${ph.barColor}"></div></div>
+      </div>
+      <div class="phase-right">
+        <span class="ptxt" id="ptxt-${ph.id}">0/${ph.tasks.length}</span>
+        <span class="chev" id="chev-${ph.id}">▼</span>
+      </div>
+    </div>
+    <div class="phase-body" id="body-${ph.id}">${tasksHtml}</div>`;
+  container.appendChild(div);
+  updateBar(ph.id,ph);
+});
+updateSummary();
+</script>
+</body>
+</html>
